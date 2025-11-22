@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# Loom - Convenience wrapper for running Loom on a beads project
+#
+# Usage:
+#   loom [workspace_path]
+#
+# Examples:
+#   loom                    # Use current directory
+#   loom .                  # Use current directory
+#   loom /path/to/project   # Use specific project
+#
+
+set -e
+
+# Get the directory where this script is located (the loom repo)
+LOOM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Get workspace path from argument or default to current directory
+WORKSPACE_PATH="${1:-.}"
+
+# Resolve to absolute path
+WORKSPACE_PATH="$(cd "$WORKSPACE_PATH" && pwd)"
+
+# Check if .beads directory exists
+if [ ! -d "$WORKSPACE_PATH/.beads" ]; then
+  echo "Warning: No .beads directory found in $WORKSPACE_PATH"
+  echo "Make sure you've initialized beads in this project with 'bd init'"
+fi
+
+echo "Starting Loom for workspace: $WORKSPACE_PATH"
+echo ""
+echo "Web UI will be available at: http://localhost:5173"
+echo "Server will run on: http://localhost:3000"
+echo ""
+
+# Change to loom directory and run dev server with workspace path
+cd "$LOOM_DIR"
+WORKSPACE_PATH="$WORKSPACE_PATH" pnpm dev

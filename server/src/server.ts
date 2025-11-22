@@ -11,10 +11,45 @@ import { registerRoutes } from './routes.js';
 import type { Issue, WSMessage } from '@loom/shared';
 import { WebSocket } from 'ws';
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-// Default to parent directory (project root) since server runs from server/
-const WORKSPACE_PATH =
-  process.env.WORKSPACE_PATH || path.join(process.cwd(), '..');
+/**
+ * Parse command-line arguments
+ */
+function parseArgs(): { workspace?: string; port?: number } {
+  const args = process.argv.slice(2);
+  const parsed: { workspace?: string; port?: number } = {};
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    // --workspace=path or --workspace path
+    if (arg.startsWith('--workspace=')) {
+      parsed.workspace = arg.split('=')[1];
+    } else if (arg === '--workspace' || arg === '-w') {
+      parsed.workspace = args[++i];
+    }
+
+    // --port=3000 or --port 3000
+    if (arg.startsWith('--port=')) {
+      parsed.port = parseInt(arg.split('=')[1]);
+    } else if (arg === '--port' || arg === '-p') {
+      parsed.port = parseInt(args[++i]);
+    }
+  }
+
+  return parsed;
+}
+
+const cliArgs = parseArgs();
+
+const PORT =
+  cliArgs.port || (process.env.PORT ? parseInt(process.env.PORT) : 3000);
+
+// Resolve workspace path priority: CLI args > env var > parent directory
+const WORKSPACE_PATH = path.resolve(
+  cliArgs.workspace ||
+    process.env.WORKSPACE_PATH ||
+    path.join(process.cwd(), '..')
+);
 
 const fastify = Fastify({
   logger: {
@@ -101,6 +136,7 @@ async function start() {
     await fastify.listen({ port: PORT, host: '0.0.0.0' });
     console.log(`Loom server listening on port ${PORT}`);
     console.log(`WebSocket: ws://localhost:${PORT}/ws`);
+    console.log(`Workspace: ${WORKSPACE_PATH}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
