@@ -4,6 +4,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
+import path from 'path';
 import { BeadsWatcher } from './watcher.js';
 import { BdCli } from './bd-cli.js';
 import { registerRoutes } from './routes.js';
@@ -11,7 +12,9 @@ import type { Issue, WSMessage } from '@loom/shared';
 import { WebSocket } from 'ws';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-const WORKSPACE_PATH = process.env.WORKSPACE_PATH || process.cwd();
+// Default to parent directory (project root) since server runs from server/
+const WORKSPACE_PATH =
+  process.env.WORKSPACE_PATH || path.join(process.cwd(), '..');
 
 const fastify = Fastify({
   logger: {

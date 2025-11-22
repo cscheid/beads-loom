@@ -6,6 +6,7 @@ import { queryClient } from '@/lib/queryClient';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { Layout } from '@/components/Layout';
 import { IssuesPage } from '@/pages/IssuesPage';
+import { IssueDetailPage } from '@/pages/IssueDetailPage';
 import { ReadyPage } from '@/pages/ReadyPage';
 import { BoardPage } from '@/pages/BoardPage';
 import { GraphPage } from '@/pages/GraphPage';
@@ -20,6 +21,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<IssuesPage />} />
+          <Route path="issue/:id" element={<IssueDetailPage />} />
           <Route path="ready" element={<ReadyPage />} />
           <Route path="board" element={<BoardPage />} />
           <Route path="graph" element={<GraphPage />} />

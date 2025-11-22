@@ -21,11 +21,16 @@ export async function registerRoutes(fastify: FastifyInstance, bdCli: BdCli) {
     return await bdCli.listIssues();
   });
 
-  // Get single issue
+  // Get all issues with dependency information (for graph view)
+  fastify.get<{ Reply: Issue[] }>('/api/graph', async () => {
+    return await bdCli.getAllIssuesWithDependencies();
+  });
+
+  // Get single issue with full dependency information
   fastify.get<{ Params: { id: string }; Reply: Issue }>(
     '/api/issues/:id',
     async (request) => {
-      return await bdCli.getIssue(request.params.id);
+      return await bdCli.getIssueWithDependencies(request.params.id);
     }
   );
 

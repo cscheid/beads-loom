@@ -5,8 +5,8 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { FilterBar } from '@/components/FilterBar';
+import { IssueCard } from '@/components/IssueCard';
 import { useFilterStore } from '@/stores/filterStore';
-import type { Issue } from '@loom/shared';
 
 export function IssuesPage() {
   const {
@@ -130,7 +130,15 @@ export function IssuesPage() {
             <label className="text-sm text-gray-600">Sort by:</label>
             <select
               value={sortField}
-              onChange={(e) => setSortField(e.target.value as any)}
+              onChange={(e) =>
+                setSortField(
+                  e.target.value as
+                    | 'title'
+                    | 'priority'
+                    | 'created_at'
+                    | 'updated_at'
+                )
+              }
               className="px-3 py-1 border border-gray-300 rounded-md text-sm"
             >
               <option value="created_at">Created</option>
@@ -150,49 +158,12 @@ export function IssuesPage() {
         {filteredIssues.length === 0 ? (
           <p className="text-gray-500">No issues match the current filters</p>
         ) : (
-          <div className="space-y-4">
+          <div>
             {filteredIssues.map((issue) => (
               <IssueCard key={issue.id} issue={issue} />
             ))}
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function IssueCard({ issue }: { issue: Issue }) {
-  return (
-    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="font-semibold text-lg">{issue.title}</h3>
-          <p className="text-sm text-gray-600 mt-1">{issue.description}</p>
-          <div className="flex gap-2 mt-2">
-            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-              {issue.status.replace('_', ' ')}
-            </span>
-            <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded">
-              P{issue.priority}
-            </span>
-            <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded">
-              {issue.issue_type}
-            </span>
-            {issue.labels && issue.labels.length > 0 && (
-              <>
-                {issue.labels.map((label) => (
-                  <span
-                    key={label}
-                    className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded"
-                  >
-                    {label}
-                  </span>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-        <span className="text-sm text-gray-500">{issue.id}</span>
       </div>
     </div>
   );

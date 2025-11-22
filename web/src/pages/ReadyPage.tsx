@@ -3,6 +3,7 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { IssueCard } from '@/components/IssueCard';
 
 export function ReadyPage() {
   const {
@@ -35,33 +36,9 @@ export function ReadyPage() {
       {issues && issues.length === 0 ? (
         <p className="text-gray-500">No ready work available</p>
       ) : (
-        <div className="space-y-4">
+        <div>
           {issues?.map((issue) => (
-            <div
-              key={issue.id}
-              className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">{issue.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {issue.description}
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
-                      Ready
-                    </span>
-                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded">
-                      P{issue.priority}
-                    </span>
-                    <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded">
-                      {issue.issue_type}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500">{issue.id}</span>
-              </div>
-            </div>
+            <IssueCard key={issue.id} issue={issue} />
           ))}
         </div>
       )}

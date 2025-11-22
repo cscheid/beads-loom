@@ -3,12 +3,13 @@
  */
 import { Link, Outlet } from 'react-router-dom';
 import { useUIStore } from '@/stores/uiStore';
+import { UpdateNotification } from './UpdateNotification';
 
 export function Layout() {
   const wsConnected = useUIStore((state) => state.wsConnected);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="px-6 py-4">
@@ -33,10 +34,9 @@ export function Layout() {
         {/* Sidebar */}
         <aside className="w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-73px)]">
           <nav className="p-4 space-y-1">
-            <NavLink to="/" label="All Issues" />
             <NavLink to="/ready" label="Ready Work" />
-            <NavLink to="/board" label="Board" />
-            <NavLink to="/graph" label="Graph" />
+            <NavLink to="/" label="All Issues" />
+            <NavLink to="/graph" label="Visual Mode" />
           </nav>
         </aside>
 
@@ -45,6 +45,9 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Update notification */}
+      <UpdateNotification />
     </div>
   );
 }

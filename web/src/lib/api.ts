@@ -63,4 +63,10 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch blocked issues');
     return res.json();
   },
+
+  async getGraphData(): Promise<Issue[]> {
+    const res = await fetch(`${API_BASE}/api/graph`);
+    if (!res.ok) throw new Error('Failed to fetch graph data');
+    return res.json();
+  },
 };

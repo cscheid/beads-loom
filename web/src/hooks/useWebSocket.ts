@@ -11,6 +11,7 @@ const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001/ws';
 export function useWebSocket() {
   const queryClient = useQueryClient();
   const setWsConnected = useUIStore((state) => state.setWsConnected);
+  const setHasPendingUpdate = useUIStore((state) => state.setHasPendingUpdate);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -28,16 +29,22 @@ export function useWebSocket() {
 
         switch (message.type) {
           case 'issues_updated':
-            // Invalidate and refetch issues query
-            queryClient.invalidateQueries({ queryKey: ['issues'] });
-            break;
-
           case 'issue_created':
           case 'issue_updated':
-          case 'issue_deleted':
-            // Invalidate issues list
-            queryClient.invalidateQueries({ queryKey: ['issues'] });
+          case 'issue_deleted': {
+            // Check if user has unsaved changes by reading current state
+            const hasUnsavedChanges = useUIStore.getState().hasUnsavedChanges;
+
+            if (hasUnsavedChanges) {
+              // Set flag to show update notification instead of auto-refreshing
+              setHasPendingUpdate(true);
+            } else {
+              // No unsaved changes - safe to invalidate and refetch
+              queryClient.invalidateQueries({ queryKey: ['issues'] });
+              queryClient.invalidateQueries({ queryKey: ['issue'] });
+            }
             break;
+          }
 
           default:
             console.log('Unknown message type:', message.type);

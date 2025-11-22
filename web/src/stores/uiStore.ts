@@ -16,6 +16,14 @@ interface UIState {
   // WebSocket connection status
   wsConnected: boolean;
   setWsConnected: (connected: boolean) => void;
+
+  // Unsaved changes tracking
+  hasUnsavedChanges: boolean;
+  setHasUnsavedChanges: (hasChanges: boolean) => void;
+
+  // Pending update notification
+  hasPendingUpdate: boolean;
+  setHasPendingUpdate: (hasPending: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -31,4 +39,12 @@ export const useUIStore = create<UIState>((set) => ({
   // WebSocket
   wsConnected: false,
   setWsConnected: (connected) => set({ wsConnected: connected }),
+
+  // Unsaved changes
+  hasUnsavedChanges: false,
+  setHasUnsavedChanges: (hasChanges) => set({ hasUnsavedChanges: hasChanges }),
+
+  // Pending update
+  hasPendingUpdate: false,
+  setHasPendingUpdate: (hasPending) => set({ hasPendingUpdate: hasPending }),
 }));

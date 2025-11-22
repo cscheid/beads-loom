@@ -14,6 +14,12 @@ export type DependencyType =
   | 'parent-child'
   | 'discovered-from';
 
+// A dependency edge with the related issue and type information
+export interface DependencyEdge {
+  issue: Issue;
+  type: DependencyType;
+}
+
 export interface Issue {
   id: string;
   title: string;
@@ -25,8 +31,10 @@ export interface Issue {
   created_at: string;
   updated_at: string;
   closed_at?: string;
-  // Dependencies are returned as full Issue objects by bd show
-  dependencies?: Issue[];
+  // Forward dependencies: issues this one depends on
+  depends_on?: DependencyEdge[];
+  // Reverse dependencies: issues that depend on this one
+  depended_by?: DependencyEdge[];
 }
 
 // Dependency tree response from bd dep tree

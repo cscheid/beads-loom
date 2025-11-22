@@ -3,11 +3,15 @@
  */
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import path from 'path';
+import Database from 'better-sqlite3';
 import type {
   Issue,
   CreateIssueRequest,
   UpdateIssueRequest,
   DependencyTreeNode,
+  DependencyEdge,
+  DependencyType,
 } from '@loom/shared';
 
 const execAsync = promisify(exec);
@@ -117,5 +121,152 @@ export class BdCli {
     const output = await this.runCommand(`bd dep tree ${id} --json`);
     if (!output) return [];
     return JSON.parse(output) as DependencyTreeNode[];
+  }
+
+  /**
+   * Discover the database path by finding .beads/*.db files
+   */
+  private async getDbPath(): Promise<string> {
+    const { stdout } = await execAsync('ls .beads/*.db', {
+      cwd: this.workspacePath,
+    });
+    return path.join(this.workspacePath, stdout.trim());
+  }
+
+  /**
+   * Get forward dependencies (issues this one depends on) with type information
+   */
+  async getDependsOn(issueId: string): Promise<DependencyEdge[]> {
+    const dbPath = await this.getDbPath();
+    const db = new Database(dbPath, { readonly: true });
+
+    try {
+      const rows = db
+        .prepare(
+          `
+          SELECT d.depends_on_id, d.type
+          FROM dependencies d
+          WHERE d.issue_id = ?
+        `
+        )
+        .all(issueId) as Array<{ depends_on_id: string; type: DependencyType }>;
+
+      const edges: DependencyEdge[] = [];
+      for (const row of rows) {
+        const issue = await this.getIssue(row.depends_on_id);
+        edges.push({ issue, type: row.type });
+      }
+
+      return edges;
+    } finally {
+      db.close();
+    }
+  }
+
+  /**
+   * Get reverse dependencies (issues that depend on this one) with type information
+   */
+  async getDependedBy(issueId: string): Promise<DependencyEdge[]> {
+    const dbPath = await this.getDbPath();
+    const db = new Database(dbPath, { readonly: true });
+
+    try {
+      const rows = db
+        .prepare(
+          `
+          SELECT d.issue_id, d.type
+          FROM dependencies d
+          WHERE d.depends_on_id = ?
+        `
+        )
+        .all(issueId) as Array<{ issue_id: string; type: DependencyType }>;
+
+      const edges: DependencyEdge[] = [];
+      for (const row of rows) {
+        const issue = await this.getIssue(row.issue_id);
+        edges.push({ issue, type: row.type });
+      }
+
+      return edges;
+    } finally {
+      db.close();
+    }
+  }
+
+  /**
+   * Get an issue with full dependency information (both forward and reverse)
+   */
+  async getIssueWithDependencies(id: string): Promise<Issue> {
+    const [issue, dependsOn, dependedBy] = await Promise.all([
+      this.getIssue(id),
+      this.getDependsOn(id),
+      this.getDependedBy(id),
+    ]);
+
+    return {
+      ...issue,
+      depends_on: dependsOn.length > 0 ? dependsOn : undefined,
+      depended_by: dependedBy.length > 0 ? dependedBy : undefined,
+    };
+  }
+
+  /**
+   * Get all issues with their dependency information
+   * More efficient than calling getIssueWithDependencies for each issue
+   */
+  async getAllIssuesWithDependencies(): Promise<Issue[]> {
+    const issues = await this.listIssues();
+    const dbPath = await this.getDbPath();
+    const db = new Database(dbPath, { readonly: true });
+
+    try {
+      // Get all dependencies in one query
+      const allDeps = db
+        .prepare('SELECT issue_id, depends_on_id, type FROM dependencies')
+        .all() as Array<{
+        issue_id: string;
+        depends_on_id: string;
+        type: DependencyType;
+      }>;
+
+      // Build maps for quick lookup
+      const issueMap = new Map(issues.map((issue) => [issue.id, issue]));
+      const dependsOnMap = new Map<string, DependencyEdge[]>();
+      const dependedByMap = new Map<string, DependencyEdge[]>();
+
+      // Populate dependency maps
+      for (const dep of allDeps) {
+        // Forward dependencies (issue depends on something)
+        if (!dependsOnMap.has(dep.issue_id)) {
+          dependsOnMap.set(dep.issue_id, []);
+        }
+        const dependsOnIssue = issueMap.get(dep.depends_on_id);
+        if (dependsOnIssue) {
+          dependsOnMap
+            .get(dep.issue_id)!
+            .push({ issue: dependsOnIssue, type: dep.type });
+        }
+
+        // Reverse dependencies (something depends on issue)
+        if (!dependedByMap.has(dep.depends_on_id)) {
+          dependedByMap.set(dep.depends_on_id, []);
+        }
+        const dependedByIssue = issueMap.get(dep.issue_id);
+        if (dependedByIssue) {
+          dependedByMap
+            .get(dep.depends_on_id)!
+            .push({ issue: dependedByIssue, type: dep.type });
+        }
+      }
+
+      // Enrich issues with dependency data
+      return issues.map((issue) => ({
+        ...issue,
+        depends_on: dependsOnMap.get(issue.id),
+        depended_by: dependedByMap.get(issue.id),
+      }));
+    } finally {
+      db.close();
+    }
   }
 }
