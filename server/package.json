@@ -1,0 +1,30 @@
+{
+  "name": "@loom/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Loom backend server with WebSocket and file watcher",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.0",
+    "@fastify/websocket": "^10.0.0",
+    "@loom/shared": "workspace:*",
+    "chokidar": "^3.6.0",
+    "fastify": "^4.26.0",
+    "pino-pretty": "^11.0.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}
