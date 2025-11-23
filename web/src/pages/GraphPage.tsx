@@ -19,12 +19,10 @@ import ReactFlow, {
 } from 'reactflow';
 import dagre from 'dagre';
 import { api } from '@/lib/api';
+import { FilterBar } from '@/components/FilterBar';
+import { useFilterStore } from '@/stores/filterStore';
 import type { Issue } from '@loom/shared';
 import 'reactflow/dist/style.css';
-
-// Dagre layout configuration
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 const nodeWidth = 250;
 const nodeHeight = 80;
@@ -57,6 +55,10 @@ const getLayoutedElements = (
   edges: Edge[],
   direction = 'TB'
 ) => {
+  // Create a fresh graph for each layout computation
+  // This prevents old nodes from previous layouts affecting the current layout
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: direction, nodesep: 50, ranksep: 100 });
 
   nodes.forEach((node) => {
@@ -94,47 +96,35 @@ export function GraphPage() {
     queryFn: api.getGraphData,
   });
 
-  // Filter state
-  const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(
-    new Set(['open', 'in_progress', 'blocked', 'closed'])
-  );
-  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(
-    new Set(['bug', 'feature', 'task', 'epic', 'chore'])
-  );
-
-  // Toggle filter selection
-  const toggleStatus = (status: string) => {
-    const newSet = new Set(selectedStatuses);
-    if (newSet.has(status)) {
-      newSet.delete(status);
-    } else {
-      newSet.add(status);
-    }
-    setSelectedStatuses(newSet);
-  };
-
-  const toggleType = (type: string) => {
-    const newSet = new Set(selectedTypes);
-    if (newSet.has(type)) {
-      newSet.delete(type);
-    } else {
-      newSet.add(type);
-    }
-    setSelectedTypes(newSet);
-  };
+  // Use shared filter store
+  const { statusFilter, priorityFilter, typeFilter } = useFilterStore();
 
   // Convert issues to nodes and edges with filtering
   const { initialNodes, initialEdges } = useMemo(() => {
     if (!issues) return { initialNodes: [], initialEdges: [] };
 
     // Step 1: Find selected issues based on filters
+    // Empty filter arrays mean "show all"
     const selectedIssueIds = new Set(
       issues
-        .filter(
-          (issue) =>
-            selectedStatuses.has(issue.status) &&
-            selectedTypes.has(issue.issue_type)
-        )
+        .filter((issue) => {
+          // Status filter
+          if (statusFilter.length > 0 && !statusFilter.includes(issue.status)) {
+            return false;
+          }
+          // Priority filter
+          if (
+            priorityFilter.length > 0 &&
+            !priorityFilter.includes(issue.priority)
+          ) {
+            return false;
+          }
+          // Type filter
+          if (typeFilter.length > 0 && !typeFilter.includes(issue.issue_type)) {
+            return false;
+          }
+          return true;
+        })
         .map((issue) => issue.id)
     );
 
@@ -192,7 +182,7 @@ export function GraphPage() {
     });
 
     return { initialNodes: nodes, initialEdges: allEdges };
-  }, [issues, selectedStatuses, selectedTypes]);
+  }, [issues, statusFilter, priorityFilter, typeFilter]);
 
   // Apply dagre layout
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => {
@@ -239,99 +229,59 @@ export function GraphPage() {
   }
 
   return (
-    <div className="w-full h-screen">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={onNodeClick}
-        nodeTypes={nodeTypes}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={true}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-      >
-        <FitViewOnChange
-          shouldFit={shouldFitView}
-          onFitted={() => setShouldFitView(false)}
-        />
-        <Background />
-        <Controls />
-        <MiniMap
-          nodeColor={(node) => {
-            const issue = node.data.issue as Issue;
-            return issue.status === 'closed' ? '#d1d5db' : '#3b82f6';
-          }}
-        />
-        <Panel
-          position="top-left"
-          className="bg-white p-4 rounded shadow max-w-xs"
+    <div className="w-full h-screen flex flex-col">
+      <FilterBar />
+      <div className="flex-1">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={onNodeClick}
+          nodeTypes={nodeTypes}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={true}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
         >
-          <h2 className="text-lg font-bold mb-2">Dependency Graph</h2>
-          <p className="text-sm text-gray-600 mb-3">
-            Showing {nodes.length} of {issues?.length || 0} issues
-          </p>
+          <FitViewOnChange
+            shouldFit={shouldFitView}
+            onFitted={() => setShouldFitView(false)}
+          />
+          <Background />
+          <Controls />
+          <MiniMap
+            nodeColor={(node) => {
+              const issue = node.data.issue as Issue;
+              return issue.status === 'closed' ? '#d1d5db' : '#3b82f6';
+            }}
+          />
+          <Panel position="top-left" className="bg-white p-3 rounded shadow">
+            <h2 className="text-sm font-semibold mb-1">Dependency Graph</h2>
+            <p className="text-xs text-gray-600">
+              Showing {nodes.length} of {issues?.length || 0} issues
+            </p>
 
-          {/* Status Filters */}
-          <div className="mb-3">
-            <h3 className="text-xs font-semibold text-gray-700 mb-1">Status</h3>
-            <div className="space-y-1">
-              {['open', 'in_progress', 'blocked', 'closed'].map((status) => (
-                <label
-                  key={status}
-                  className="flex items-center gap-2 text-xs cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedStatuses.has(status)}
-                    onChange={() => toggleStatus(status)}
-                    className="rounded"
-                  />
-                  <span>{status.replace('_', ' ')}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Type Filters */}
-          <div className="mb-3">
-            <h3 className="text-xs font-semibold text-gray-700 mb-1">Type</h3>
-            <div className="space-y-1">
-              {['bug', 'feature', 'task', 'epic', 'chore'].map((type) => (
-                <label
-                  key={type}
-                  className="flex items-center gap-2 text-xs cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedTypes.has(type)}
-                    onChange={() => toggleType(type)}
-                    className="rounded"
-                  />
-                  <span>{type}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div className="border-t pt-2 mt-2">
-            <h3 className="text-xs font-semibold text-gray-700 mb-1">Legend</h3>
-            <div className="space-y-1 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-0.5 bg-black"></div>
-                <span>Blocks</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-0.5 bg-gray-400"></div>
-                <span>Other dependencies</span>
+            {/* Legend */}
+            <div className="border-t pt-2 mt-2">
+              <h3 className="text-xs font-semibold text-gray-700 mb-1">
+                Legend
+              </h3>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-0.5 bg-black"></div>
+                  <span>Blocks</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-0.5 bg-gray-400"></div>
+                  <span>Other dependencies</span>
+                </div>
               </div>
             </div>
-          </div>
-        </Panel>
-      </ReactFlow>
+          </Panel>
+        </ReactFlow>
+      </div>
     </div>
   );
 }

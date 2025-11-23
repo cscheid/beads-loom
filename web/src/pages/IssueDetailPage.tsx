@@ -134,7 +134,7 @@ export function IssueDetailPage() {
         </div>
 
         {/* Metadata */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4 mb-6">
           <MetadataField
             label="Status"
             value={
@@ -163,25 +163,6 @@ export function IssueDetailPage() {
               <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded inline-block">
                 {issue.issue_type}
               </span>
-            }
-          />
-          <MetadataField
-            label="Labels"
-            value={
-              issue.labels && issue.labels.length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {issue.labels.map((label) => (
-                    <span
-                      key={label}
-                      className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded"
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-gray-400 text-sm">None</span>
-              )
             }
           />
         </div>

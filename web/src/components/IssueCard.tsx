@@ -41,18 +41,6 @@ export function IssueCard({ issue }: IssueCardProps) {
             <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded">
               {issue.issue_type}
             </span>
-            {issue.labels && issue.labels.length > 0 && (
-              <>
-                {issue.labels.map((label) => (
-                  <span
-                    key={label}
-                    className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded"
-                  >
-                    {label}
-                  </span>
-                ))}
-              </>
-            )}
           </div>
           <p className="text-sm text-gray-600 mt-1">{truncatedDescription}</p>
         </div>

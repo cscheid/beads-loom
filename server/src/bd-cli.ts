@@ -60,9 +60,6 @@ export class BdCli {
     if (request.issue_type) {
       args.push(`-t ${request.issue_type}`);
     }
-    if (request.labels && request.labels.length > 0) {
-      args.push(`-l ${request.labels.join(',')}`);
-    }
 
     args.push('--json');
 

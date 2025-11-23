@@ -12,7 +12,6 @@ interface FilterState {
   statusFilter: IssueStatus[];
   priorityFilter: IssuePriority[];
   typeFilter: IssueType[];
-  labelFilter: string[];
   searchQuery: string;
 
   // Sorting
@@ -29,9 +28,6 @@ interface FilterState {
   setTypeFilter: (types: IssueType[]) => void;
   toggleType: (type: IssueType) => void;
 
-  setLabelFilter: (labels: string[]) => void;
-  toggleLabel: (label: string) => void;
-
   setSearchQuery: (query: string) => void;
 
   setSortField: (field: SortField) => void;
@@ -46,7 +42,6 @@ export const useFilterStore = create<FilterState>((set) => ({
   statusFilter: [],
   priorityFilter: [],
   typeFilter: [],
-  labelFilter: [],
   searchQuery: '',
 
   sortField: 'created_at',
@@ -79,15 +74,6 @@ export const useFilterStore = create<FilterState>((set) => ({
         : [...state.typeFilter, type],
     })),
 
-  // Label filter
-  setLabelFilter: (labels) => set({ labelFilter: labels }),
-  toggleLabel: (label) =>
-    set((state) => ({
-      labelFilter: state.labelFilter.includes(label)
-        ? state.labelFilter.filter((l) => l !== label)
-        : [...state.labelFilter, label],
-    })),
-
   // Search
   setSearchQuery: (query) => set({ searchQuery: query }),
 
@@ -105,7 +91,6 @@ export const useFilterStore = create<FilterState>((set) => ({
       statusFilter: [],
       priorityFilter: [],
       typeFilter: [],
-      labelFilter: [],
       searchQuery: '',
     }),
 }));

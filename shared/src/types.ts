@@ -27,7 +27,6 @@ export interface Issue {
   status: IssueStatus;
   priority: IssuePriority;
   issue_type: IssueType;
-  labels: string[];
   created_at: string;
   updated_at: string;
   closed_at?: string;
@@ -48,7 +47,6 @@ export interface CreateIssueRequest {
   description?: string;
   priority?: IssuePriority;
   issue_type?: IssueType;
-  labels?: string[];
 }
 
 export interface UpdateIssueRequest {
@@ -57,7 +55,6 @@ export interface UpdateIssueRequest {
   description?: string;
   status?: IssueStatus;
   priority?: IssuePriority;
-  labels?: string[];
 }
 
 // WebSocket message types
