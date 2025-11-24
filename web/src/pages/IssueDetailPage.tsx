@@ -300,7 +300,7 @@ function StatusBadge({
         onClick={() => setIsEditing(true)}
         className={`text-xs px-2 py-1 rounded inline-block ${statusColors[status]} hover:opacity-80`}
       >
-        {status.replace('_', ' ')}
+        {status?.replace('_', ' ') || 'unknown'}
       </button>
     );
   }
