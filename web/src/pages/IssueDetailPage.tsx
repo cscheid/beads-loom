@@ -228,7 +228,7 @@ export function IssueDetailPage() {
               <div className="space-y-3">
                 {issue.depends_on.map((edge) => (
                   <DependencyCard
-                    key={edge.issue.id}
+                    key={`${edge.issue.id}-forward-${edge.type}`}
                     edge={edge}
                     direction="forward"
                   />
@@ -249,7 +249,7 @@ export function IssueDetailPage() {
               <div className="space-y-3">
                 {issue.depended_by.map((edge) => (
                   <DependencyCard
-                    key={edge.issue.id}
+                    key={`${edge.issue.id}-reverse-${edge.type}`}
                     edge={edge}
                     direction="reverse"
                   />
