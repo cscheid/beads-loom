@@ -294,20 +294,25 @@ function StatusBadge({
     closed: 'bg-gray-100 text-gray-800',
   };
 
+  // Validate status and provide fallback for unexpected/missing values
+  const safeStatus: IssueStatus =
+    status && statusColors[status as IssueStatus] ? status : 'open';
+  const statusLabel = safeStatus.replace('_', ' ');
+
   if (!isEditing) {
     return (
       <button
         onClick={() => setIsEditing(true)}
-        className={`text-xs px-2 py-1 rounded inline-block ${statusColors[status]} hover:opacity-80`}
+        className={`text-xs px-2 py-1 rounded inline-block ${statusColors[safeStatus]} hover:opacity-80`}
       >
-        {status?.replace('_', ' ') || 'unknown'}
+        {statusLabel}
       </button>
     );
   }
 
   return (
     <select
-      value={status}
+      value={safeStatus}
       onChange={(e) => {
         onUpdate(e.target.value as IssueStatus);
         setIsEditing(false);
@@ -519,9 +524,11 @@ function DependencyCard({
           </p>
           <div className="flex gap-2 mt-2">
             <span
-              className={`text-xs px-2 py-1 rounded ${statusColors[issue.status]}`}
+              className={`text-xs px-2 py-1 rounded ${
+                statusColors[issue.status] || 'bg-gray-100 text-gray-800'
+              }`}
             >
-              {issue.status.replace('_', ' ')}
+              {issue.status ? issue.status.replace('_', ' ') : 'unknown'}
             </span>
             <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded">
               P{issue.priority}
