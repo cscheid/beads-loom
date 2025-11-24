@@ -194,17 +194,13 @@ export class BdCli {
    * Get an issue with full dependency information (both forward and reverse)
    */
   async getIssueWithDependencies(id: string): Promise<Issue> {
-    const [issue, dependsOn, dependedBy] = await Promise.all([
-      this.getIssue(id),
-      this.getDependsOn(id),
-      this.getDependedBy(id),
-    ]);
-
-    return {
-      ...issue,
-      depends_on: dependsOn.length > 0 ? dependsOn : undefined,
-      depended_by: dependedBy.length > 0 ? dependedBy : undefined,
-    };
+    // Reuse the richer data from the bulk path so we get consistent fields
+    const allIssues = await this.getAllIssuesWithDependencies();
+    const issue = allIssues.find((i) => i.id === id);
+    if (!issue) {
+      throw new Error(`Issue ${id} not found`);
+    }
+    return issue;
   }
 
   /**
