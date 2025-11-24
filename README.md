@@ -37,6 +37,10 @@ The easiest way to use Loom across all platforms (Windows, Mac, Linux) is with t
 **Global installation (recommended):**
 
 ```bash
+# If you installed pnpm as a standalone binary (via scoop, winget, Homebrew, etc.),
+# run this once to configure pnpm's global bin directory:
+pnpm setup
+
 # Install globally from the loom directory
 cd beads-loom
 pnpm link --global
@@ -125,7 +129,7 @@ Loom is a monorepo with three packages:
 
 ### Windows Requirements
 
-On Windows, you may need [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) for the `better-sqlite3` native dependency. If you encounter installation errors, install the build tools with the "Desktop development with C++" workload.
+The `better-sqlite3` native dependency automatically downloads prebuilt binaries for Node.js LTS versions. If you're using a non-LTS Node.js version or encounter installation errors, you may need [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) with the "Desktop development with C++" workload.
 
 ## License
 
