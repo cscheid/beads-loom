@@ -30,9 +30,47 @@ pnpm build
 
 ## Usage
 
-### Quick Start with the Wrapper Script
+### Cross-Platform Usage (Recommended)
 
-The easiest way to use Loom is with the `loom` wrapper script:
+The easiest way to use Loom across all platforms (Windows, Mac, Linux) is with the Node.js launcher:
+
+**Global installation (recommended):**
+
+```bash
+# Install globally from the loom directory
+cd beads-loom
+pnpm link --global
+
+# Now use 'loom' command from anywhere
+loom .                    # Use current directory
+loom /path/to/project     # Use specific project
+```
+
+**Direct execution (no install):**
+
+```bash
+# From your project directory
+node /path/to/beads-loom/loom.js .
+
+# Or from the loom directory
+pnpm loom /path/to/project
+```
+
+**Install from GitHub:**
+
+```bash
+# Install globally from GitHub
+pnpm add -g github:cderv/beads-loom
+
+# Then use 'loom' command anywhere
+loom /path/to/project
+```
+
+The web UI will open at http://localhost:5173 and the server runs on http://localhost:3000.
+
+### Unix/Mac: Bash Script
+
+For Unix/Mac users or Windows users with Git Bash, the original bash script is still available:
 
 ```bash
 # From your project directory
@@ -42,7 +80,7 @@ The easiest way to use Loom is with the `loom` wrapper script:
 /path/to/beads-ui/loom /path/to/your-project
 ```
 
-The web UI will open at http://localhost:5173 and the server runs on http://localhost:3000.
+**Note:** The global `loom` command (after `pnpm link --global`) uses the cross-platform Node.js launcher.
 
 ### Alternative Methods
 
@@ -84,6 +122,10 @@ Loom is a monorepo with three packages:
 - Node.js 18+
 - pnpm
 - [beads](https://github.com/steveyegge/beads) CLI installed and initialized in your project
+
+### Windows Requirements
+
+On Windows, you may need [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) for the `better-sqlite3` native dependency. If you encounter installation errors, install the build tools with the "Desktop development with C++" workload.
 
 ## License
 

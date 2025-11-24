@@ -4,6 +4,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
+import { readdir } from 'fs/promises';
 import Database from 'better-sqlite3';
 import type {
   Issue,
@@ -124,10 +125,13 @@ export class BdCli {
    * Discover the database path by finding .beads/*.db files
    */
   private async getDbPath(): Promise<string> {
-    const { stdout } = await execAsync('ls .beads/*.db', {
-      cwd: this.workspacePath,
-    });
-    return path.join(this.workspacePath, stdout.trim());
+    const beadsDir = path.join(this.workspacePath, '.beads');
+    const files = await readdir(beadsDir);
+    const dbFile = files.find((f) => f.endsWith('.db'));
+    if (!dbFile) {
+      throw new Error('No .db file found in .beads directory');
+    }
+    return path.join(beadsDir, dbFile);
   }
 
   /**
