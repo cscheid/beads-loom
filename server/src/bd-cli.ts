@@ -44,7 +44,8 @@ export class BdCli {
 
   async getIssue(id: string): Promise<Issue> {
     const output = await this.runCommand(`bd show ${id} --json`);
-    return JSON.parse(output) as Issue;
+    const issues = JSON.parse(output) as Issue[];
+    return issues[0];
   }
 
   async createIssue(request: CreateIssueRequest): Promise<Issue> {
