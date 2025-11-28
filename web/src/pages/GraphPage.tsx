@@ -1,7 +1,7 @@
 /**
  * Graph visualization page for issue dependencies
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import ReactFlow, {
@@ -189,16 +189,93 @@ export function GraphPage() {
     return getLayoutedElements(initialNodes, initialEdges, 'LR');
   }, [initialNodes, initialEdges]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
   const [shouldFitView, setShouldFitView] = useState(false);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
-  // Update nodes and edges when layout changes
+  // Compute highlighted nodes and edges based on hover
+  const { highlightedNodeIds, highlightedEdgeIds } = useMemo(() => {
+    if (!hoveredNodeId) {
+      return {
+        highlightedNodeIds: new Set<string>(),
+        highlightedEdgeIds: new Set<string>(),
+      };
+    }
+
+    const nodeIds = new Set([hoveredNodeId]);
+    const edgeIds = new Set<string>();
+
+    layoutedEdges.forEach((edge) => {
+      if (edge.source === hoveredNodeId || edge.target === hoveredNodeId) {
+        edgeIds.add(edge.id);
+        nodeIds.add(edge.source);
+        nodeIds.add(edge.target);
+      }
+    });
+
+    return { highlightedNodeIds: nodeIds, highlightedEdgeIds: edgeIds };
+  }, [hoveredNodeId, layoutedEdges]);
+
+  // Apply highlight styling to nodes
+  const displayNodes = useMemo(() => {
+    return layoutedNodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        isHighlighted: highlightedNodeIds.has(node.id),
+        isDimmed: hoveredNodeId !== null && !highlightedNodeIds.has(node.id),
+      },
+    }));
+  }, [layoutedNodes, highlightedNodeIds, hoveredNodeId]);
+
+  // Apply highlight styling to edges
+  const displayEdges = useMemo(() => {
+    return layoutedEdges.map((edge) => {
+      const isHighlighted = highlightedEdgeIds.has(edge.id);
+      const isDimmed = hoveredNodeId !== null && !isHighlighted;
+
+      return {
+        ...edge,
+        style: {
+          ...edge.style,
+          stroke: isHighlighted
+            ? '#3b82f6'
+            : isDimmed
+              ? '#d1d5db'
+              : edge.style?.stroke,
+          strokeWidth: isHighlighted ? 3 : 2,
+          opacity: isDimmed ? 0.3 : 1,
+        },
+      };
+    });
+  }, [layoutedEdges, highlightedEdgeIds, hoveredNodeId]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(displayNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(displayEdges);
+
+  // Track layout changes separately from hover changes
+  const prevLayoutRef = useRef({ nodes: layoutedNodes, edges: layoutedEdges });
+
+  // Update nodes and edges when display changes
   useEffect(() => {
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-    setShouldFitView(true);
-  }, [layoutedNodes, layoutedEdges, setNodes, setEdges]);
+    setNodes(displayNodes);
+    setEdges(displayEdges);
+
+    // Only fit view if layout actually changed (not just hover state)
+    if (
+      prevLayoutRef.current.nodes !== layoutedNodes ||
+      prevLayoutRef.current.edges !== layoutedEdges
+    ) {
+      setShouldFitView(true);
+      prevLayoutRef.current = { nodes: layoutedNodes, edges: layoutedEdges };
+    }
+  }, [
+    displayNodes,
+    displayEdges,
+    setNodes,
+    setEdges,
+    layoutedNodes,
+    layoutedEdges,
+  ]);
 
   // Custom node types
   const nodeTypes = useMemo(
@@ -215,6 +292,18 @@ export function GraphPage() {
     },
     [navigate]
   );
+
+  // Handle node hover for highlighting
+  const onNodeMouseEnter = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      setHoveredNodeId(node.id);
+    },
+    []
+  );
+
+  const onNodeMouseLeave = useCallback(() => {
+    setHoveredNodeId(null);
+  }, []);
 
   if (isLoading) {
     return <div className="p-8">Loading dependency graph...</div>;
@@ -238,6 +327,8 @@ export function GraphPage() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
+          onNodeMouseEnter={onNodeMouseEnter}
+          onNodeMouseLeave={onNodeMouseLeave}
           nodeTypes={nodeTypes}
           nodesDraggable={false}
           nodesConnectable={false}
@@ -287,16 +378,27 @@ export function GraphPage() {
 }
 
 // Custom minimal issue node component
-function IssueNode({ data }: { data: { issue: Issue } }) {
-  const { issue } = data;
+function IssueNode({
+  data,
+}: {
+  data: { issue: Issue; isHighlighted?: boolean; isDimmed?: boolean };
+}) {
+  const { issue, isHighlighted, isDimmed } = data;
+
+  // Build class names based on highlight state
+  const containerClasses = [
+    'px-4 py-3 bg-white border cursor-pointer transition-all',
+    isHighlighted
+      ? 'border-blue-500 shadow-lg ring-2 ring-blue-200'
+      : isDimmed
+        ? 'border-gray-200 opacity-40'
+        : 'border-gray-300 hover:border-blue-500 hover:shadow-md',
+  ].join(' ');
 
   return (
     <>
       <Handle type="target" position={Position.Left} />
-      <div
-        className="px-4 py-3 bg-white border border-gray-300 cursor-pointer hover:border-blue-500 hover:shadow-md transition-all"
-        style={{ width: nodeWidth }}
-      >
+      <div className={containerClasses} style={{ width: nodeWidth }}>
         <div className="flex items-baseline gap-2">
           <span className="text-xs text-gray-500 font-mono">{issue.id}</span>
           <span
