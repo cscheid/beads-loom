@@ -2,8 +2,13 @@
   "name": "loom",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "A modern web interface for beads issue tracking",
+  "bin": {
+    "loom": "./loom.js"
+  },
   "scripts": {
+    "loom": "node loom.js",
     "dev": "pnpm --parallel --stream run dev",
     "build": "pnpm --recursive run build",
     "lint": "pnpm --recursive run lint",

@@ -2,3 +2,6 @@ packages:
   - 'server'
   - 'web'
   - 'shared'
+
+onlyBuiltDependencies:
+  - better-sqlite3
