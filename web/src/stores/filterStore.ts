@@ -38,9 +38,9 @@ interface FilterState {
 }
 
 export const useFilterStore = create<FilterState>((set) => ({
-  // Initial state - no filters
-  statusFilter: [],
-  priorityFilter: [],
+  // Initial state - default filters exclude closed issues and p4
+  statusFilter: ['open', 'in_progress', 'blocked'],
+  priorityFilter: [0, 1, 2, 3],
   typeFilter: [],
   searchQuery: '',
 
