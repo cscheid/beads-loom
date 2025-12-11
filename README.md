@@ -2,6 +2,8 @@
 
 A modern web interface for [beads](https://github.com/steveyegge/beads) - where the threads of your work come together.
 
+![Loom UI Screenshot](banner-screenshot.png)
+
 ## What is Loom?
 
 Loom provides a visual, browser-based UI for managing [beads](https://github.com/steveyegge/beads) issue databases. While beads excels at CLI-based issue tracking for LLM-assisted development, Loom adds powerful visualization and navigation tools for human developers managing the work.
