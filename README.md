@@ -20,8 +20,8 @@ Loom provides a visual, browser-based UI for managing [beads](https://github.com
 
 ```bash
 # Clone the repository
-git clone https://github.com/cscheid/beads-ui.git
-cd beads-ui
+git clone https://github.com/cscheid/beads-loom.git
+cd beads-loom
 
 # Install dependencies (requires pnpm)
 pnpm install
@@ -38,10 +38,10 @@ The easiest way to use Loom is with the `loom` wrapper script:
 
 ```bash
 # From your project directory
-/path/to/beads-ui/loom .
+/path/to/beads-loom/loom .
 
 # Or specify a project path
-/path/to/beads-ui/loom /path/to/your-project
+/path/to/beads-loom/loom /path/to/your-project
 ```
 
 The web UI will open at http://localhost:5173 and the server runs on http://localhost:3000.
@@ -57,17 +57,17 @@ WORKSPACE_PATH=/path/to/your-project pnpm dev
 **Using CLI arguments:**
 
 ```bash
-# From the beads-ui directory
+# From the beads-loom directory
 pnpm --filter @loom/server dev --workspace /path/to/your-project
 
 # Start both server and web UI
 WORKSPACE_PATH=/path/to/your-project pnpm dev
 ```
 
-**For development on the beads-ui project itself:**
+**For development on the beads-loom project itself:**
 
 ```bash
-# From the beads-ui directory
+# From the beads-loom directory
 WORKSPACE_PATH=. pnpm dev
 ```
 
